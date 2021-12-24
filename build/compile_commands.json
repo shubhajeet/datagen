@@ -1,0 +1,7 @@
+[
+{
+  "directory": "/home/sujit/experiment/datagen/build",
+  "command": "/usr/bin/x86_64-linux-gnu-g++-7 -DDEBUG -I/home/sujit/experiment/datagen/src/core -O3 -march=native -Wall -Wextra -g -g -O0 -std=gnu++1z -o CMakeFiles/datagen.dir/src/main.cpp.o -c /home/sujit/experiment/datagen/src/main.cpp",
+  "file": "/home/sujit/experiment/datagen/src/main.cpp"
+}
+]
