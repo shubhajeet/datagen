@@ -9,6 +9,7 @@ template < typename F> void display(F begin, F end) {
     std::cout << *p << std::endl;
   }
 }
+
 template < typename F> void record(F begin, F end, std::string filename) {
   std::ofstream data;
   data.open(filename);
@@ -18,9 +19,8 @@ template < typename F> void record(F begin, F end, std::string filename) {
   data.close();
 }
 
-
 /*
-template < typename F, typename S> void display(std::vector<std::pair<F, S>>::iterator begin, std::vector<std::pair<F, S>>::iterator end) {
+template < typename F, typename S> void display(F begin, F end) {
   for(std::vector<std::pair<F,S>>::iterator p = begin; p != end; p++) {
     std::cout << p->first << ","  << p->second << std::endl;
   }
@@ -49,15 +49,20 @@ bool load_binary_data(T data[], int length, const std::string& file_path) {
 
 template <class T>
 bool load_text_data(T array[], int length, const std::string& file_path) {
+  //std::cout << "load_text_data" << std::endl;
   std::ifstream is(file_path.c_str());
+  //std::ifstream is(file_path);
   if (!is.is_open()) {
+    std::cerr << "file not open" << std::endl;
     return false;
   }
   int i = 0;
   std::string str;
   while (std::getline(is, str) && i < length) {
+    //std::cout << str;
     std::istringstream ss(str);
     ss >> array[i];
+    //std::cout << array[i];
     i++;
   }
   is.close();

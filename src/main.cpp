@@ -3,19 +3,19 @@
 #include "flags.h"
 #include "utils.h"
 
-#define OUTPUT_DT int
+#define OUTPUT_DT double
 
 int main(int argc, char* argv[]) {
   auto flags = parse_flags(argc, argv);
   std::string distribution = get_required(flags, "distribution");
   std::string file_name = get_required(flags, "output_file");
-  auto start = stoi(get_required(flags,"start"));
-  auto stop = stoi(get_required(flags,"stop"));
+  auto start = strtof64(get_required(flags,"start"));
+  auto stop = stotof64(get_required(flags,"stop"));
   auto length = stoi(get_required(flags,"length"));
   
   std::vector<OUTPUT_DT> vec(length);
   if (distribution == "linear"){
-    std::generate(vec.begin(),vec.end(),linear_gen<OUTPUT_DT>(start,stop));
+    std::generate(vec.begin(),vec.end(),linstep_gen<OUTPUT_DT>(OUTPUT_DT(start),OUTPUT_DT(stop));
   }
   else if (distribution == "exponential") {
     std::generate(vec.begin(),vec.end(),exp_gen<OUTPUT_DT>(start,stop));

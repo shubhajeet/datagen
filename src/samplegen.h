@@ -59,3 +59,13 @@ std::function<T()> linear_gen(T start, T stop) {
         return T(dis(gen)*(stop-start) + start);
         };
 }
+
+template <typename T>
+std::function<T()> linstep_gen(T start, T step) {
+    int counter =  0;
+    return [=,&counter]() {
+        static int counter = 0;
+        counter++;
+        return T(start + counter * step);
+    };
+}
