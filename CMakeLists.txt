@@ -2,6 +2,9 @@ cmake_minimum_required(VERSION 3.12)
 project(datagen)
 
 set(CMAKE_CXX_STANDARD 20)
+find_package(yaml-cpp REQUIRED)
+include_directories(/home/sujit/lib/spdlog/include)
+include_directories(${YAML_CPP_INCLUDE_DIRS})
 
 # Define the macro ‘DEBUG' in the debug mode
 if(CMAKE_BUILD_TYPE STREQUAL Debug)        
@@ -33,6 +36,12 @@ include_directories(src/core)
 #)
 
 add_executable(datagen src/main.cpp)
+add_executable(generator src/generator.cpp)
+add_executable(perflinear src/perflinear.cpp)
+add_executable(gentrace src/gentrace.cpp)
+target_link_libraries(generator ${YAML_CPP_LIBRARIES})
+target_link_libraries(gentrace ${YAML_CPP_LIBRARIES})
+target_link_libraries(perflinear ${YAML_CPP_LIBRARIES})
 #target_include_directories(test_alex PRIVATE ${DOCTEST_DOWNLOAD_DIR})
 
 #enable_testing()

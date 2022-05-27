@@ -3,6 +3,7 @@
 #include <iterator>
 #include <fstream>
 #include "zipf.h"
+#include "spdlog/spdlog.h"
 
 template < typename F> void display(F begin, F end) {
   for(F p = begin; p != end; p++) {
@@ -40,6 +41,7 @@ template <class T>
 bool load_binary_data(T data[], int length, const std::string& file_path) {
   std::ifstream is(file_path.c_str(), std::ios::binary | std::ios::in);
   if (!is.is_open()) {
+    std::cerr << "Unable to open file " << file_path << std::endl;
     return false;
   }
   is.read(reinterpret_cast<char*>(data), std::streamsize(length * sizeof(T)));
@@ -48,12 +50,36 @@ bool load_binary_data(T data[], int length, const std::string& file_path) {
 }
 
 template <class T>
-bool load_text_data(T array[], int length, const std::string& file_path) {
-  //std::cout << "load_text_data" << std::endl;
+bool load_text_data(std::vector<T>& array, int length, const std::string& file_path) {
+  std::cout << "load_text_data" << std::endl;
   std::ifstream is(file_path.c_str());
   //std::ifstream is(file_path);
   if (!is.is_open()) {
-    std::cerr << "file not open" << std::endl;
+    std::cerr << "Unable to open file " << file_path << std::endl;
+    return false;
+  }
+  int i = 0;
+  std::string str;
+  while (std::getline(is, str) && i < length) {
+    //std::cout << str;
+    std::istringstream ss(str);
+    T data;
+    ss >> data;
+    array.push_back(data);
+    //std::cout << array[i];
+    i++;
+  }
+  is.close();
+  return true;
+}
+
+template <class T>
+bool load_text_data(T array[], int length, const std::string& file_path) {
+  std::cout << "load_text_data" << std::endl;
+  std::ifstream is(file_path.c_str());
+  //std::ifstream is(file_path);
+  if (!is.is_open()) {
+    std::cerr << "Unable to open file " << file_path << std::endl;
     return false;
   }
   int i = 0;
@@ -68,6 +94,8 @@ bool load_text_data(T array[], int length, const std::string& file_path) {
   is.close();
   return true;
 }
+
+
 
 template <class T>
 T* get_search_keys(T array[], int num_keys, int num_searches) {
