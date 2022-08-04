@@ -12,6 +12,7 @@ template < typename F> void display(F begin, F end) {
 }
 
 template < typename F> void record(F begin, F end, std::string filename) {
+  std::cout << "Writing output to: " << filename << std::endl;
   std::ofstream data;
   data.open(filename);
   for(F p = begin; p != end; p++) {
@@ -37,6 +38,8 @@ template < typename F, typename S> void record(std::vector<std::pair<F, S>> pred
   data.close();
 }
 
+
+
 template <class T>
 bool load_binary_data(T data[], int length, const std::string& file_path) {
   std::ifstream is(file_path.c_str(), std::ios::binary | std::ios::in);
@@ -48,6 +51,7 @@ bool load_binary_data(T data[], int length, const std::string& file_path) {
   is.close();
   return true;
 }
+
 
 template <class T>
 bool load_text_data(std::vector<T>& array, int length, const std::string& file_path) {

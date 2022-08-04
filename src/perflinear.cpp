@@ -1,3 +1,16 @@
+
+/*
+ * generate linear dataset
+ * - TODO
+ * 1. Define OUTPUT_DT
+ * 2. create distribution.yaml file
+ * 3. pass the required parameter as argument
+ * 
+ * Distribution supported:
+ * - linear
+ * 
+ * YAML 
+ * */
 #include <iostream>
 #include <string.h>
 #include "samplegen.h"
@@ -10,6 +23,7 @@
 #define OUTPUT_DT uint32_t
 
 int main(int argc, char* argv[]) {
+
   spdlog::set_level(spdlog::level::debug);
   std::string distribution = "distribution.yaml";
   std::string file_name = "output.csv";

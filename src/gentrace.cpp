@@ -1,4 +1,16 @@
 
+/*
+ * generate the trace dataset
+ * - TODO
+ *   1. Define OUTPUT__DT
+ *   2. create distribution.yaml file
+ *   3. pass the required paramter as argument
+ *
+ *   Distribution supported:
+ *   - linear
+ *   - 
+ */
+
 #include "flags.h"
 #include "utils.h"
 #include "yaml-cpp/yaml.h"
@@ -11,28 +23,35 @@
 #define OUTPUT_DT uint32_t
 
 int main(int argc, char* argv[]) {
-  spdlog::set_level(spdlog::level::debug);
+    // Default values
+  spdlog::set_level(spdlog::level::warn);
   std::string distribution = "distribution_ran.yaml";
   std::string file_name = "output.csv";
+  // Command line parsing
   if (argc >= 2) {
     auto flags = parse_flags(argc, argv);
     distribution = get_required(flags, "distribution");
     file_name = get_required(flags, "output_file");
   }
   spdlog::info("distrbution_file: {} output_file: {}", distribution, file_name);
+  // YAML load
   YAML::Node dist = YAML::LoadFile(distribution);
+  // Find the length of the whole dataset
   auto length = 0;
   for (std::size_t i=0; i < dist.size(); i++) {
     auto pice = dist[i];
     length = length + pice["length"].as<OUTPUT_DT>();
   }
   spdlog::info("Dataset_length: {} ",length);
+  // Declare the final dataset
   std::vector<OUTPUT_DT> vec(length);
   auto ptr = vec.begin();
-  auto start = 0;
+  OUTPUT_DT start = 0;
+  // loop through yaml file
   for (std::size_t i = 0; i < dist.size(); i++) {
     auto pice = dist[i];
     auto distribution = pice["distribution"].as<std::string>();
+    // linear dataset support
     if (distribution == "linear") {
       auto dis_len = pice["length"].as<OUTPUT_DT>();
       auto offset = pice["start"].as<OUTPUT_DT>();
@@ -40,9 +59,9 @@ int main(int argc, char* argv[]) {
       start = offset;
       auto stop = pice["stop"].as<OUTPUT_DT>();
       auto step = double(stop - offset)/ dis_len;
-      auto randomness = pice["randomness"].as<double>();
+      //auto randomness = pice["randomness"].as<double>();
       spdlog::info("distribution: linear start: {} offset: {} stop: {} step: {} length: {}", start, offset, stop, step, dis_len);
-      auto random_data_size = randomness * dis_len;
+      //auto random_data_size = randomness * dis_len;
       auto linstep = [=]() {
         static OUTPUT_DT output = start;
         //float ranno = (float) rand() / RAND_MAX;
@@ -51,15 +70,18 @@ int main(int argc, char* argv[]) {
         spdlog::debug("lingen output: {}",output);
         return OUTPUT_DT(output);
       };
+      /*
       auto rangen = [=]() {
-        float ranno = (float) rand() / RAND_MAX;
+        float ranno = (double) rand() / RAND_MAX;
         //spdlog::debug("random_no: {}",ranno);
         auto output = (stop - offset) * ranno + start;
         spdlog::debug("rangen output: {}",output);
         return OUTPUT_DT(output);
       };
-      std::generate(ptr, ptr+random_data_size, rangen );
-      std::generate(ptr+random_data_size, ptr+dis_len, linstep);
+      */
+      //std::generate(ptr, ptr+random_data_size, rangen );
+      //std::generate(ptr+random_data_size, ptr+dis_len, linstep);
+      std::generate(ptr, ptr+dis_len, linstep);
       //std::sort(ptr,ptr+dis_len);
       start = start + dis_len * step;
       ptr = ptr + dis_len;
@@ -70,9 +92,10 @@ int main(int argc, char* argv[]) {
       //start = start + offset;
       start = offset;
       auto stop = pice["stop"].as<OUTPUT_DT>();
-      auto step = (stop - offset)/ dis_len;
+      auto step = static_cast<float>(stop - offset)/ dis_len;
       auto randomness = pice["randomness"].as<float>();
-      auto RAND_FACTOR = pice["rand_fact"].as<float>();
+      auto RAND_FACTOR = step;
+      //auto RAND_FACTOR = pice["rand_fact"].as<float>();
       spdlog::info("distribution: random start: {} offset: {} stop: {} step: {} length: {}", start, offset, stop, step, dis_len);
       /*
       auto unqrangen = [=]() {
@@ -98,22 +121,22 @@ int main(int argc, char* argv[]) {
         do {
           float ranno = (float) rand() / RAND_MAX;
           output = 1 + RAND_FACTOR * randomness * ranno + output;
-          spdlog::debug("rangen output: {}", output);
+          spdlog::warn("rangen output: {}", output);
         }
         while ( std::find(prev_output.begin(), prev_output.end(), output) != prev_output.end() );
         *ptr_ = OUTPUT_DT(output);
      }
       auto first = *ptr;
       auto last = *(ptr+dis_len-1);
-      auto scalefactor = double(stop - start)/double(last - first);
+      auto scalefactor = static_cast<double>(stop - start)/static_cast<double>(last - first);
       if (scalefactor < 1) {
         spdlog::error("Scaled factor is less than 1. scaled_factor: {} first: {} last: {}",scalefactor, first, last);
       } else {
         spdlog::debug("scaled_factor: {} first: {} last: {}", scalefactor, first, last); 
       }
       auto scale = [=](const OUTPUT_DT val) {
-        auto outval = start + double(val-first) * scalefactor;
-        spdlog::debug("scaled_output: {}", outval );
+        auto outval = std::round(start + (val-first) * scalefactor);
+        spdlog::warn("rand_factor: {} start: {} first: {} stop: {} scaled_output: {}", val, start, first, stop, outval );
         return outval;
       };
      std::transform(ptr, ptr+dis_len, ptr, scale );
@@ -125,6 +148,7 @@ int main(int argc, char* argv[]) {
       auto dis_len = pice["length"].as<OUTPUT_DT>();
       auto offset = pice["start"].as<OUTPUT_DT>();
       start = offset;
+      //start += offset;
       auto stop = pice["stop"].as<OUTPUT_DT>();
       auto mean = pice["mean"].as<double>();
       auto stddev = pice["stddev"].as<double>();
@@ -178,6 +202,7 @@ int main(int argc, char* argv[]) {
     else if (distribution == "lognormal") {
       auto dis_len = pice["length"].as<OUTPUT_DT>();
       auto offset = pice["start"].as<OUTPUT_DT>();
+      //start += offset;
       start = offset;
       auto stop = pice["stop"].as<OUTPUT_DT>();
       auto mean = pice["mean"].as<double>();
@@ -261,6 +286,7 @@ int main(int argc, char* argv[]) {
       ptr = ptr + dis_len;
     }
   }
+  // sort and save the generated dataset
   //display(vec.begin(),vec.end());
   //std::sort(vec.begin(),vec.end());
   record(vec.begin(),vec.end(),file_name);
