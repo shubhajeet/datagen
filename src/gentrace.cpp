@@ -8,7 +8,7 @@
  *
  *   Distribution supported:
  *   - linear
- *   - 
+ *   -
  */
 
 #include "flags.h"
@@ -20,54 +20,68 @@
 #include <stdlib.h>
 #include <random>
 #include <algorithm>
+#include <gflags/gflags.h>
+
 #define OUTPUT_DT uint32_t
 
-int main(int argc, char* argv[]) {
-    // Default values
+DEFINE_string(distribution, "distribution.yaml", "distribution file");
+DEFINE_string(output_file, "output.csv", "output file");
+
+int main(int argc, char *argv[])
+{
+  google::ParseCommandLineFlags(&argc, &argv, true);
+  auto distribution = FLAGS_distribution;
+  auto file_name = FLAGS_output_file;
+  // Default values
   spdlog::set_level(spdlog::level::warn);
-  std::string distribution = "distribution_ran.yaml";
-  std::string file_name = "output.csv";
-  // Command line parsing
-  if (argc >= 2) {
-    auto flags = parse_flags(argc, argv);
-    distribution = get_required(flags, "distribution");
-    file_name = get_required(flags, "output_file");
-  }
+  // std::string distribution = "/home/sujit/data/syn_data/linseg50per50ran.yaml";
+  // std::string file_name = "output.csv";
+  // // Command line parsing
+  // if (argc >= 2)
+  // {
+  //   auto flags = parse_flags(argc, argv);
+  //   distribution = get_required(flags, "distribution");
+  //   file_name = get_required(flags, "output_file");
+  // }
   spdlog::info("distrbution_file: {} output_file: {}", distribution, file_name);
   // YAML load
   YAML::Node dist = YAML::LoadFile(distribution);
   // Find the length of the whole dataset
   auto length = 0;
-  for (std::size_t i=0; i < dist.size(); i++) {
+  for (std::size_t i = 0; i < dist.size(); i++)
+  {
     auto pice = dist[i];
     length = length + pice["length"].as<OUTPUT_DT>();
   }
-  spdlog::info("Dataset_length: {} ",length);
+  spdlog::info("Dataset_length: {} ", length);
   // Declare the final dataset
   std::vector<OUTPUT_DT> vec(length);
   auto ptr = vec.begin();
   OUTPUT_DT start = 0;
   // loop through yaml file
-  for (std::size_t i = 0; i < dist.size(); i++) {
+  for (std::size_t i = 0; i < dist.size(); i++)
+  {
     auto pice = dist[i];
     auto distribution = pice["distribution"].as<std::string>();
     // linear dataset support
-    if (distribution == "linear") {
+    if (distribution == "linear")
+    {
       auto dis_len = pice["length"].as<OUTPUT_DT>();
       auto offset = pice["start"].as<OUTPUT_DT>();
-      //start = start + offset;
+      // start = start + offset;
       start = offset;
       auto stop = pice["stop"].as<OUTPUT_DT>();
-      auto step = double(stop - offset)/ dis_len;
-      //auto randomness = pice["randomness"].as<double>();
+      auto step = double(stop - offset) / dis_len;
+      // auto randomness = pice["randomness"].as<double>();
       spdlog::info("distribution: linear start: {} offset: {} stop: {} step: {} length: {}", start, offset, stop, step, dis_len);
-      //auto random_data_size = randomness * dis_len;
-      auto linstep = [=]() {
+      // auto random_data_size = randomness * dis_len;
+      auto linstep = [=]()
+      {
         static OUTPUT_DT output = start;
-        //float ranno = (float) rand() / RAND_MAX;
-        //spdlog::debug("random_no: {}",ranno);
+        // float ranno = (float) rand() / RAND_MAX;
+        // spdlog::debug("random_no: {}",ranno);
         output = output + step;
-        spdlog::debug("lingen output: {}",output);
+        spdlog::debug("lingen output: {}", output);
         return OUTPUT_DT(output);
       };
       /*
@@ -79,76 +93,67 @@ int main(int argc, char* argv[]) {
         return OUTPUT_DT(output);
       };
       */
-      //std::generate(ptr, ptr+random_data_size, rangen );
-      //std::generate(ptr+random_data_size, ptr+dis_len, linstep);
-      std::generate(ptr, ptr+dis_len, linstep);
-      //std::sort(ptr,ptr+dis_len);
+      // std::generate(ptr, ptr+random_data_size, rangen );
+      // std::generate(ptr+random_data_size, ptr+dis_len, linstep);
+      std::generate(ptr, ptr + dis_len, linstep);
+      // std::sort(ptr,ptr+dis_len);
       start = start + dis_len * step;
       ptr = ptr + dis_len;
     }
-    else if (distribution == "random") {
+    else if (distribution == "random")
+    {
       auto dis_len = pice["length"].as<OUTPUT_DT>();
       auto offset = pice["start"].as<OUTPUT_DT>();
-      //start = start + offset;
+      // start = start + offset;
       start = offset;
       auto stop = pice["stop"].as<OUTPUT_DT>();
-      auto step = static_cast<float>(stop - offset)/ dis_len;
+      auto step = (stop - offset) / dis_len - 1;
       auto randomness = pice["randomness"].as<float>();
-      auto RAND_FACTOR = step;
-      //auto RAND_FACTOR = pice["rand_fact"].as<float>();
+      // auto RAND_FACTOR = step;
+      auto RAND_FACTOR = pice["rand_fact"].as<float>();
+      if (RAND_FACTOR > step)
+      {
+        RAND_FACTOR = step;
+      }
       spdlog::info("distribution: random start: {} offset: {} stop: {} step: {} length: {}", start, offset, stop, step, dis_len);
-      /*
-      auto unqrangen = [=]() {
-        static std::vector<OUTPUT_DT> prev_output = {};
-        static OUTPUT_DT output = 0;
-        do {
-          float ranno = (float) rand() / RAND_MAX;
-          //spdlog::debug("random_no: {}",ranno);
-          output = 1 + RAND_FACTOR * randomness * ranno + output;
-          spdlog::debug("rangen output: {}",output);
-        }
-        while ( std::find(prev_output.begin(), prev_output.end(), output) != prev_output.end() );
-        return OUTPUT_DT(output);
-      };
-      //std::generate(ptr, ptr+dis_len, unqrangen );
-      for (auto ptr_ = ptr; ptr_ <= (ptr+dis_len); ptr_++) {
-        *ptr_ = unqrangen();
-      }
-      */
-      std::vector<OUTPUT_DT> prev_output = {};
       OUTPUT_DT output = 0;
-      for (auto ptr_ = ptr; ptr_ <= (ptr+dis_len); ptr_++) {
-        do {
-          float ranno = (float) rand() / RAND_MAX;
-          output = 1 + RAND_FACTOR * randomness * ranno + output;
-          spdlog::warn("rangen output: {}", output);
-        }
-        while ( std::find(prev_output.begin(), prev_output.end(), output) != prev_output.end() );
-        *ptr_ = OUTPUT_DT(output);
-     }
-      auto first = *ptr;
-      auto last = *(ptr+dis_len-1);
-      auto scalefactor = static_cast<double>(stop - start)/static_cast<double>(last - first);
-      if (scalefactor < 1) {
-        spdlog::error("Scaled factor is less than 1. scaled_factor: {} first: {} last: {}",scalefactor, first, last);
-      } else {
-        spdlog::debug("scaled_factor: {} first: {} last: {}", scalefactor, first, last); 
+      for (auto ptr_ = ptr; ptr_ <= (ptr + dis_len); ptr_++)
+      {
+        float ranno = (float)rand() / RAND_MAX;
+        auto step = static_cast<OUTPUT_DT>(1 + RAND_FACTOR * randomness * ranno);
+        auto prev_output = output;
+        output = output + step;
+        spdlog::warn("rangen prev_output: {} output: {} step: {} ", prev_output, output, step);
+        *ptr_ = output;
       }
-      auto scale = [=](const OUTPUT_DT val) {
-        auto outval = std::round(start + (val-first) * scalefactor);
-        spdlog::warn("rand_factor: {} start: {} first: {} stop: {} scaled_output: {}", val, start, first, stop, outval );
+      auto first = *ptr;
+      auto last = *(ptr + dis_len - 1);
+      auto scalefactor = static_cast<double>(stop - start) / static_cast<double>(last - first);
+      if (scalefactor < 1)
+      {
+        spdlog::error("Scaled factor is less than 1. scaled_factor: {} first: {} last: {}", scalefactor, first, last);
+      }
+      else
+      {
+        spdlog::debug("scaled_factor: {} first: {} last: {}", scalefactor, first, last);
+      }
+      auto scale = [=](const OUTPUT_DT val)
+      {
+        auto outval = std::round(start + (val - first) * scalefactor);
+        spdlog::debug("rand_factor: {} start: {} first: {} last: {} stop: {} scaled_output: {}", val, start, first, last, stop, outval);
         return outval;
       };
-     std::transform(ptr, ptr+dis_len, ptr, scale );
-      //std::sort(ptr,ptr+dis_len);
+      std::transform(ptr, ptr + dis_len, ptr, scale);
+      // std::sort(ptr,ptr+dis_len);
       start = start + dis_len * step;
       ptr = ptr + dis_len;
     }
-    else if (distribution == "normal") {
+    else if (distribution == "normal")
+    {
       auto dis_len = pice["length"].as<OUTPUT_DT>();
       auto offset = pice["start"].as<OUTPUT_DT>();
       start = offset;
-      //start += offset;
+      // start += offset;
       auto stop = pice["stop"].as<OUTPUT_DT>();
       auto mean = pice["mean"].as<double>();
       auto stddev = pice["stddev"].as<double>();
@@ -157,9 +162,10 @@ int main(int argc, char* argv[]) {
       spdlog::info("distribution: normal start: {} offset: {} stop: {}  length: {}", start, offset, stop, dis_len);
       auto start_norm = mean - crop_range * stddev;
       auto step_norm = 2 * crop_range * stddev / dis_len;
-      //auto step = float(stop - start) / dis_len;
-      auto normdis = [=](float pos) {
-        return  1/(stddev*sqrt(2*3.14)) * exp(-(pos-mean)*(pos-mean)/(2*stddev*stddev));
+      // auto step = float(stop - start) / dis_len;
+      auto normdis = [=](float pos)
+      {
+        return 1 / (stddev * sqrt(2 * 3.14)) * exp(-(pos - mean) * (pos - mean) / (2 * stddev * stddev));
       };
       /*
       auto normstepgen = [=]() {
@@ -174,35 +180,41 @@ int main(int argc, char* argv[]) {
       */
       OUTPUT_DT output = 0;
       auto pos = start_norm;
-      for ( auto ptr_ = ptr; ptr_ < (ptr+dis_len); ptr_++) {
+      for (auto ptr_ = ptr; ptr_ < (ptr + dis_len); ptr_++)
+      {
         output = std::max(1.0, SCALE * normdis(pos)) + output;
         pos = pos + step_norm;
-        spdlog::debug("normal output: {}",output);
+        spdlog::debug("normal output: {}", output);
         *ptr_ = OUTPUT_DT(output);
       };
       auto first = *ptr;
-      auto last = *(ptr+dis_len-1);
-      auto scalefactor = double(stop - start)/double(last - first);
-      if (scalefactor < 1) {
-        spdlog::error("Scaled factor is less than 1. scaled_factor: {} first: {} last: {}",scalefactor, first, last);
-      } else {
-        spdlog::debug("scaled_factor: {} first: {} last: {}", scalefactor, first, last); 
+      auto last = *(ptr + dis_len - 1);
+      auto scalefactor = double(stop - start) / double(last - first);
+      if (scalefactor < 1)
+      {
+        spdlog::error("Scaled factor is less than 1. scaled_factor: {} first: {} last: {}", scalefactor, first, last);
       }
-      auto scale = [=](const OUTPUT_DT val) {
-        auto outval = start + double(val-first) * scalefactor;
-        spdlog::debug("scaled_output: {}", outval );
+      else
+      {
+        spdlog::debug("scaled_factor: {} first: {} last: {}", scalefactor, first, last);
+      }
+      auto scale = [=](const OUTPUT_DT val)
+      {
+        auto outval = start + double(val - first) * scalefactor;
+        spdlog::debug("scaled_output: {}", outval);
         return outval;
       };
 
-      std::transform(ptr, ptr+dis_len, ptr, scale );
-      //std::sort(ptr,ptr+dis_len);
-      start = *(ptr + dis_len -1);
+      std::transform(ptr, ptr + dis_len, ptr, scale);
+      // std::sort(ptr,ptr+dis_len);
+      start = *(ptr + dis_len - 1);
       ptr = ptr + dis_len;
-    }  
-    else if (distribution == "lognormal") {
+    }
+    else if (distribution == "lognormal")
+    {
       auto dis_len = pice["length"].as<OUTPUT_DT>();
       auto offset = pice["start"].as<OUTPUT_DT>();
-      //start += offset;
+      // start += offset;
       start = offset;
       auto stop = pice["stop"].as<OUTPUT_DT>();
       auto mean = pice["mean"].as<double>();
@@ -212,10 +224,11 @@ int main(int argc, char* argv[]) {
       auto crop_stop = pice["crop_stop"].as<double>();
       spdlog::info("distribution: lognormal start: {} offset: {} stop: {}  length: {}", start, offset, stop, dis_len);
       auto start_norm = crop_start;
-      auto step_norm = double(crop_stop - crop_start)/ dis_len;
-      //auto step = float(stop - start) / dis_len;
-      auto normdis = [=](float pos) {
-        return  1/(stddev*sqrt(2*3.14)) * exp(-(pos-mean)*(pos-mean)/(1*stddev*stddev));
+      auto step_norm = double(crop_stop - crop_start) / dis_len;
+      // auto step = float(stop - start) / dis_len;
+      auto normdis = [=](float pos)
+      {
+        return 1 / (stddev * sqrt(2 * 3.14)) * exp(-(pos - mean) * (pos - mean) / (1 * stddev * stddev));
       };
       /*
       auto normstepgen = [=]() {
@@ -230,65 +243,76 @@ int main(int argc, char* argv[]) {
       */
       OUTPUT_DT output = 0;
       auto pos = start_norm;
-      for (auto ptr_ = ptr; ptr_ < (ptr+dis_len); ptr_++) {
-        output = std::max(1.0, SCALE * normdis(logf(pos))/pos) + output;
+      for (auto ptr_ = ptr; ptr_ < (ptr + dis_len); ptr_++)
+      {
+        output = std::max(1.0, SCALE * normdis(logf(pos)) / pos) + output;
         pos = pos + step_norm;
-        spdlog::debug("lognormal output: {}",output);
+        spdlog::debug("lognormal output: {}", output);
         *ptr_ = output;
       }
       auto first = *ptr;
-      auto last = *(ptr+dis_len-1);
-      auto scalefactor = double(stop - start)/double(last - first);
-      if (scalefactor < 1) {
-        spdlog::error("Scaled factor is less than 1. scaled_factor: {} first: {} last: {}",scalefactor, first, last);
-      } else {
-        spdlog::debug("scaled_factor: {} first: {} last: {}", scalefactor, first, last); 
+      auto last = *(ptr + dis_len - 1);
+      auto scalefactor = double(stop - start) / double(last - first);
+      if (scalefactor < 1)
+      {
+        spdlog::error("Scaled factor is less than 1. scaled_factor: {} first: {} last: {}", scalefactor, first, last);
       }
-      auto scale = [=](const OUTPUT_DT val) {
-        auto outval = start + double(val-first) * scalefactor;
-        spdlog::debug("scaled_output: {}", outval );
+      else
+      {
+        spdlog::debug("scaled_factor: {} first: {} last: {}", scalefactor, first, last);
+      }
+      auto scale = [=](const OUTPUT_DT val)
+      {
+        auto outval = start + double(val - first) * scalefactor;
+        spdlog::debug("scaled_output: {}", outval);
         return outval;
       };
-      std::transform(ptr, ptr+dis_len, ptr, scale );
-      //std::sort(ptr,ptr+dis_len);
-      start = *(ptr + dis_len -1);
+      std::transform(ptr, ptr + dis_len, ptr, scale);
+      // std::sort(ptr,ptr+dis_len);
+      start = *(ptr + dis_len - 1);
       ptr = ptr + dis_len;
     }
-    else if (distribution == "exponential") {
+    else if (distribution == "exponential")
+    {
       auto dis_len = pice["length"].as<OUTPUT_DT>();
       auto offset = pice["start"].as<OUTPUT_DT>();
       start = offset;
       auto stop = pice["stop"].as<OUTPUT_DT>();
       auto base = pice["base"].as<double>();
       spdlog::info("distribution: exponential start: {} offset: {} stop: {}  length: {}", start, offset, stop, dis_len);
-      auto expgen = [=]() {
+      auto expgen = [=]()
+      {
         static auto power = 0;
         power = power + 1;
-        return OUTPUT_DT(start + std::pow(base,power));
+        return OUTPUT_DT(start + std::pow(base, power));
       };
-      std::generate(ptr, ptr+dis_len, expgen );
+      std::generate(ptr, ptr + dis_len, expgen);
       auto first = *ptr;
-      auto last = *(ptr+dis_len-1);
-      auto scalefactor = double(stop - start)/double(last - first);
-      if (scalefactor < 1) {
-        spdlog::error("Scaled factor is less than 1. scaled_factor: {}",scalefactor);
-      } else {
-        spdlog::debug("scaled_factor: {}",scalefactor);
+      auto last = *(ptr + dis_len - 1);
+      auto scalefactor = double(stop - start) / double(last - first);
+      if (scalefactor < 1)
+      {
+        spdlog::error("Scaled factor is less than 1. scaled_factor: {}", scalefactor);
       }
-      auto scale = [=](const OUTPUT_DT val) {
-        auto outval = start + double(val-first) * scalefactor;
-        //spdlog::debug(" scaled_output: {}", outval );
+      else
+      {
+        spdlog::debug("scaled_factor: {}", scalefactor);
+      }
+      auto scale = [=](const OUTPUT_DT val)
+      {
+        auto outval = start + double(val - first) * scalefactor;
+        // spdlog::debug(" scaled_output: {}", outval );
         return outval;
       };
-      std::transform(ptr, ptr+dis_len, ptr, scale );
-      //std::sort(ptr,ptr+dis_len);
-      start = *(ptr + dis_len -1);
+      std::transform(ptr, ptr + dis_len, ptr, scale);
+      // std::sort(ptr,ptr+dis_len);
+      start = *(ptr + dis_len - 1);
       ptr = ptr + dis_len;
     }
   }
   // sort and save the generated dataset
-  //display(vec.begin(),vec.end());
-  //std::sort(vec.begin(),vec.end());
-  record(vec.begin(),vec.end(),file_name);
+  // display(vec.begin(),vec.end());
+  // std::sort(vec.begin(),vec.end());
+  record(vec.begin(), vec.end(), file_name);
   return 0;
 }

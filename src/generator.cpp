@@ -16,34 +16,43 @@
 #include <math.h>
 #include "spdlog/spdlog.h"
 #include <stdlib.h>
+#include <gflags/gflags.h>
 
 #define OUTPUT_DT uint32_t
 
-int main(int argc, char* argv[]) {
+DEFINE_string(distribution, "distribution.yaml", "distribution file");
+DEFINE_string(output_file, "output.csv", "output file");
 
+int main(int argc, char *argv[])
+{
+  google::ParseCommandLineFlags(&argc, &argv, true);
+  auto distribution = FLAGS_distribution;
+  auto file_name = FLAGS_output_file;
   spdlog::set_level(spdlog::level::debug);
   // Default parameter
-  std::string distribution = "distribution_ran.yaml";
-  std::string file_name = "output.csv";
-  
-  // Check command line paramter
-  if (argc >= 2) {
-    auto flags = parse_flags(argc, argv);
-    distribution = get_required(flags, "distribution");
-    file_name = get_required(flags, "output_file");
-  }
-  spdlog::info("distrbution_file: {} output_file: {}", distribution, file_name);
-  
+  // std::string distribution = "distribution_ran.yaml";
+  // std::string file_name = "output.csv";
+
+  // // Check command line paramter
+  // if (argc >= 2)
+  // {
+  //   auto flags = parse_flags(argc, argv);
+  //   distribution = get_required(flags, "distribution");
+  //   file_name = get_required(flags, "output_file");
+  // }
+  // spdlog::info("distrbution_file: {} output_file: {}", distribution, file_name);
+
   // Loads the yaml file
   YAML::Node dist = YAML::LoadFile(distribution);
-  
+
   // First calculate the length of the dataset that needs to be generated
   auto length = 0;
-  for (std::size_t i=0; i < dist.size(); i++) {
+  for (std::size_t i = 0; i < dist.size(); i++)
+  {
     auto pice = dist[i];
     length = length + pice["length"].as<OUTPUT_DT>();
   }
-  spdlog::info("Dataset_length: {} ",length);
+  spdlog::info("Dataset_length: {} ", length);
 
   // Declare vector of required length
   std::vector<OUTPUT_DT> vec(length);
@@ -57,34 +66,37 @@ int main(int argc, char* argv[]) {
    *    stop: <int>
    *    length: <int>
    */
-  for (std::size_t i = 0; i < dist.size(); i++) {
+  for (std::size_t i = 0; i < dist.size(); i++)
+  {
     auto pice = dist[i];
     auto distribution = pice["distribution"].as<std::string>();
-    if (distribution == "linear") {
+    if (distribution == "linear")
+    {
       auto dis_len = pice["length"].as<int>();
       auto offset = pice["start"].as<OUTPUT_DT>();
       start = start + offset;
-      //start = offset;
+      // start = offset;
       auto stop = pice["stop"].as<OUTPUT_DT>();
-      auto step = (stop - offset)/ dis_len;
+      auto step = (stop - offset) / dis_len;
 
       auto randomness = pice["randomness"].as<float>();
       spdlog::info("distribution: linear start: {} offset: {} step: {} length: {}", start, offset, step, dis_len);
-      
-      auto linstep = [=]() {
+
+      auto linstep = [=]()
+      {
         static OUTPUT_DT output = start;
-        float ranno = (float) rand() / RAND_MAX;
-        //spdlog::debug("random_no: {}",ranno);
+        float ranno = (float)rand() / RAND_MAX;
+        // spdlog::debug("random_no: {}",ranno);
         output = output + step;
         return OUTPUT_DT(output - step * randomness * ranno);
       };
 
-      std::generate(ptr,ptr+dis_len, linstep );
+      std::generate(ptr, ptr + dis_len, linstep);
       start = start + dis_len * step;
       ptr = ptr + dis_len;
-    }  
+    }
   }
-  //display(vec.begin(),vec.end());
-  record(vec.begin(),vec.end(),file_name);
+  // display(vec.begin(),vec.end());
+  record(vec.begin(), vec.end(), file_name);
   return 0;
 }
