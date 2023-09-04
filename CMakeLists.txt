@@ -4,7 +4,11 @@ project(datagen)
 set(CMAKE_CXX_STANDARD 20)
 find_package(gflags REQUIRED)
 find_package(yaml-cpp REQUIRED)
-include_directories(/home/sujit/lib/spdlog/include)
+
+# find_package(spdlog REQUIRED)
+
+# include_directories(/home/sujit/lib/spdlog/include)
+# include_directories(/home/sujit/data/spdlog/include/spdlog)
 include_directories(${YAML_CPP_INCLUDE_DIRS})
 
 # Define the macro ‘DEBUG' in the debug mode

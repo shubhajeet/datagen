@@ -14,7 +14,7 @@
 #include "utils.h"
 #include "yaml-cpp/yaml.h"
 #include <math.h>
-#include "spdlog/spdlog.h"
+// #include "spdlog/spdlog.h"
 #include <stdlib.h>
 #include <gflags/gflags.h>
 
@@ -28,7 +28,7 @@ int main(int argc, char *argv[])
   google::ParseCommandLineFlags(&argc, &argv, true);
   auto distribution = FLAGS_distribution;
   auto file_name = FLAGS_output_file;
-  spdlog::set_level(spdlog::level::debug);
+  // spdlog::set_level(spdlog::level::debug);
   // Default parameter
   // std::string distribution = "distribution_ran.yaml";
   // std::string file_name = "output.csv";
@@ -52,7 +52,8 @@ int main(int argc, char *argv[])
     auto pice = dist[i];
     length = length + pice["length"].as<OUTPUT_DT>();
   }
-  spdlog::info("Dataset_length: {} ", length);
+  // spdlog::info("Dataset_length: {} ", length);
+  std::cout << "Dataset_length: " << length << std::endl;
 
   // Declare vector of required length
   std::vector<OUTPUT_DT> vec(length);
@@ -80,7 +81,8 @@ int main(int argc, char *argv[])
       auto step = (stop - offset) / dis_len;
 
       auto randomness = pice["randomness"].as<float>();
-      spdlog::info("distribution: linear start: {} offset: {} step: {} length: {}", start, offset, step, dis_len);
+      // spdlog::info("distribution: linear start: {} offset: {} step: {} length: {}", start, offset, step, dis_len);
+      std::cout << "distribution: linear start: " << start << " offset: " << offset << " step: " << step << " length: " << dis_len << std::endl;
 
       auto linstep = [=]()
       {

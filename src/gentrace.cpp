@@ -16,7 +16,7 @@
 #include "yaml-cpp/yaml.h"
 #include <math.h>
 #include <cmath>
-#include "spdlog/spdlog.h"
+// #include "spdlog/spdlog.h"
 #include <stdlib.h>
 #include <random>
 #include <algorithm>
@@ -33,7 +33,7 @@ int main(int argc, char *argv[])
   auto distribution = FLAGS_distribution;
   auto file_name = FLAGS_output_file;
   // Default values
-  spdlog::set_level(spdlog::level::warn);
+  // spdlog::set_level(spdlog::level::warn);
   // std::string distribution = "/home/sujit/data/syn_data/linseg50per50ran.yaml";
   // std::string file_name = "output.csv";
   // // Command line parsing
@@ -43,7 +43,8 @@ int main(int argc, char *argv[])
   //   distribution = get_required(flags, "distribution");
   //   file_name = get_required(flags, "output_file");
   // }
-  spdlog::info("distrbution_file: {} output_file: {}", distribution, file_name);
+  // spdlog::info("distrbution_file: {} output_file: {}", distribution, file_name);
+  std::cout << "distrbution_file: " << distribution << " output_file: " << file_name << std::endl;
   // YAML load
   YAML::Node dist = YAML::LoadFile(distribution);
   // Find the length of the whole dataset
@@ -53,7 +54,8 @@ int main(int argc, char *argv[])
     auto pice = dist[i];
     length = length + pice["length"].as<OUTPUT_DT>();
   }
-  spdlog::info("Dataset_length: {} ", length);
+  // spdlog::info("Dataset_length: {} ", length);
+  std::cout << "Dataset_length: " << length << std::endl;
   // Declare the final dataset
   std::vector<OUTPUT_DT> vec(length);
   auto ptr = vec.begin();
@@ -73,7 +75,8 @@ int main(int argc, char *argv[])
       auto stop = pice["stop"].as<OUTPUT_DT>();
       auto step = double(stop - offset) / dis_len;
       // auto randomness = pice["randomness"].as<double>();
-      spdlog::info("distribution: linear start: {} offset: {} stop: {} step: {} length: {}", start, offset, stop, step, dis_len);
+      // spdlog::info("distribution: linear start: {} offset: {} stop: {} step: {} length: {}", start, offset, stop, step, dis_len);
+      std::cout << "distribution: linear start: " << start << " offset: " << offset << " stop: " << stop << " step: " << step << " length: " << dis_len << std::endl;
       // auto random_data_size = randomness * dis_len;
       auto linstep = [=]()
       {
@@ -81,7 +84,8 @@ int main(int argc, char *argv[])
         // float ranno = (float) rand() / RAND_MAX;
         // spdlog::debug("random_no: {}",ranno);
         output = output + step;
-        spdlog::debug("lingen output: {}", output);
+        // spdlog::debug("lingen output: {}", output);
+        std::cout << "lingen output: " << output << std::endl;
         return OUTPUT_DT(output);
       };
       /*
@@ -115,7 +119,8 @@ int main(int argc, char *argv[])
       {
         RAND_FACTOR = step;
       }
-      spdlog::info("distribution: random start: {} offset: {} stop: {} step: {} length: {}", start, offset, stop, step, dis_len);
+      // spdlog::info("distribution: random start: {} offset: {} stop: {} step: {} length: {}", start, offset, stop, step, dis_len);
+      std::cout << "distribution: random start: " << start << " offset: " << offset << " stop: " << stop << " step: " << step << " length: " << dis_len << std::endl;
       OUTPUT_DT output = 0;
       for (auto ptr_ = ptr; ptr_ <= (ptr + dis_len); ptr_++)
       {
@@ -123,7 +128,8 @@ int main(int argc, char *argv[])
         auto step = static_cast<OUTPUT_DT>(1 + RAND_FACTOR * randomness * ranno);
         auto prev_output = output;
         output = output + step;
-        spdlog::warn("rangen prev_output: {} output: {} step: {} ", prev_output, output, step);
+        // spdlog::warn("rangen prev_output: {} output: {} step: {} ", prev_output, output, step);
+        std::cout << "rangen prev_output: " << prev_output << " output: " << output << " step: " << step << std::endl;
         *ptr_ = output;
       }
       auto first = *ptr;
@@ -131,16 +137,19 @@ int main(int argc, char *argv[])
       auto scalefactor = static_cast<double>(stop - start) / static_cast<double>(last - first);
       if (scalefactor < 1)
       {
-        spdlog::error("Scaled factor is less than 1. scaled_factor: {} first: {} last: {}", scalefactor, first, last);
+        // spdlog::error("Scaled factor is less than 1. scaled_factor: {} first: {} last: {}", scalefactor, first, last);
+        std::cerr << "Scaled factor is less than 1. scaled_factor: " << scalefactor << " first: " << first << " last: " << last << std::endl;
       }
       else
       {
-        spdlog::debug("scaled_factor: {} first: {} last: {}", scalefactor, first, last);
+        // spdlog::debug("scaled_factor: {} first: {} last: {}", scalefactor, first, last);
+        std::cout << "scaled_factor: " << scalefactor << " first: " << first << " last: " << last << std::endl;
       }
       auto scale = [=](const OUTPUT_DT val)
       {
         auto outval = std::round(start + (val - first) * scalefactor);
-        spdlog::debug("rand_factor: {} start: {} first: {} last: {} stop: {} scaled_output: {}", val, start, first, last, stop, outval);
+        // spdlog::debug("rand_factor: {} start: {} first: {} last: {} stop: {} scaled_output: {}", val, start, first, last, stop, outval);
+        std::cout << "rand_factor: " << val << " start: " << start << " first: " << first << " last: " << last << " stop: " << stop << " scaled_output: " << outval << std::endl;
         return outval;
       };
       std::transform(ptr, ptr + dis_len, ptr, scale);
@@ -159,7 +168,8 @@ int main(int argc, char *argv[])
       auto stddev = pice["stddev"].as<double>();
       auto SCALE = pice["scale"].as<double>();
       auto crop_range = pice["crop_range"].as<double>();
-      spdlog::info("distribution: normal start: {} offset: {} stop: {}  length: {}", start, offset, stop, dis_len);
+      // spdlog::info("distribution: normal start: {} offset: {} stop: {}  length: {}", start, offset, stop, dis_len);
+      std::cout << "distribution: normal start: " << start << " offset: " << offset << " stop: " << stop << " length: " << dis_len << std::endl;
       auto start_norm = mean - crop_range * stddev;
       auto step_norm = 2 * crop_range * stddev / dis_len;
       // auto step = float(stop - start) / dis_len;
@@ -184,7 +194,8 @@ int main(int argc, char *argv[])
       {
         output = std::max(1.0, SCALE * normdis(pos)) + output;
         pos = pos + step_norm;
-        spdlog::debug("normal output: {}", output);
+        // spdlog::debug("normal output: {}", output);
+        std::cout << "normal output: " << output << std::endl;
         *ptr_ = OUTPUT_DT(output);
       };
       auto first = *ptr;
@@ -192,16 +203,19 @@ int main(int argc, char *argv[])
       auto scalefactor = double(stop - start) / double(last - first);
       if (scalefactor < 1)
       {
-        spdlog::error("Scaled factor is less than 1. scaled_factor: {} first: {} last: {}", scalefactor, first, last);
+        // spdlog::error("Scaled factor is less than 1. scaled_factor: {} first: {} last: {}", scalefactor, first, last);
+        std::cerr << "Scaled factor is less than 1. scaled_factor: " << scalefactor << " first: " << first << " last: " << last << std::endl;
       }
       else
       {
-        spdlog::debug("scaled_factor: {} first: {} last: {}", scalefactor, first, last);
+        // spdlog::debug("scaled_factor: {} first: {} last: {}", scalefactor, first, last);
+        std::cout << "scaled_factor: " << scalefactor << " first: " << first << " last: " << last << std::endl;
       }
       auto scale = [=](const OUTPUT_DT val)
       {
         auto outval = start + double(val - first) * scalefactor;
-        spdlog::debug("scaled_output: {}", outval);
+        // spdlog::debug("scaled_output: {}", outval);A
+        std::cout << "scaled_output: " << outval << std::endl;
         return outval;
       };
 
@@ -222,7 +236,8 @@ int main(int argc, char *argv[])
       auto SCALE = pice["scale"].as<double>();
       auto crop_start = pice["crop_start"].as<double>();
       auto crop_stop = pice["crop_stop"].as<double>();
-      spdlog::info("distribution: lognormal start: {} offset: {} stop: {}  length: {}", start, offset, stop, dis_len);
+      // spdlog::info("distribution: lognormal start: {} offset: {} stop: {}  length: {}", start, offset, stop, dis_len);
+      std::cout << "distribution: lognormal start: " << start << " offset: " << offset << " stop: " << stop << " length: " << dis_len << std::endl;
       auto start_norm = crop_start;
       auto step_norm = double(crop_stop - crop_start) / dis_len;
       // auto step = float(stop - start) / dis_len;
@@ -247,7 +262,8 @@ int main(int argc, char *argv[])
       {
         output = std::max(1.0, SCALE * normdis(logf(pos)) / pos) + output;
         pos = pos + step_norm;
-        spdlog::debug("lognormal output: {}", output);
+        // spdlog::debug("lognormal output: {}", output);
+        std::cout << "lognormal output: " << output << std::endl;
         *ptr_ = output;
       }
       auto first = *ptr;
@@ -255,16 +271,19 @@ int main(int argc, char *argv[])
       auto scalefactor = double(stop - start) / double(last - first);
       if (scalefactor < 1)
       {
-        spdlog::error("Scaled factor is less than 1. scaled_factor: {} first: {} last: {}", scalefactor, first, last);
+        // spdlog::error("Scaled factor is less than 1. scaled_factor: {} first: {} last: {}", scalefactor, first, last);
+        std::cerr << "Scaled factor is less than 1. scaled_factor: " << scalefactor << " first: " << first << " last: " << last << std::endl;
       }
       else
       {
-        spdlog::debug("scaled_factor: {} first: {} last: {}", scalefactor, first, last);
+        // spdlog::debug("scaled_factor: {} first: {} last: {}", scalefactor, first, last);
+        std::cout << "scaled_factor: " << scalefactor << " first: " << first << " last: " << last << std::endl;
       }
       auto scale = [=](const OUTPUT_DT val)
       {
         auto outval = start + double(val - first) * scalefactor;
-        spdlog::debug("scaled_output: {}", outval);
+        // spdlog::debug("scaled_output: {}", outval);
+        std::cout << "scaled_output: " << outval << std::endl;
         return outval;
       };
       std::transform(ptr, ptr + dis_len, ptr, scale);
@@ -279,7 +298,8 @@ int main(int argc, char *argv[])
       start = offset;
       auto stop = pice["stop"].as<OUTPUT_DT>();
       auto base = pice["base"].as<double>();
-      spdlog::info("distribution: exponential start: {} offset: {} stop: {}  length: {}", start, offset, stop, dis_len);
+      // spdlog::info("distribution: exponential start: {} offset: {} stop: {}  length: {}", start, offset, stop, dis_len);
+      std::cout << "distribution: exponential start: " << start << " offset: " << offset << " stop: " << stop << " length: " << dis_len << std::endl;
       auto expgen = [=]()
       {
         static auto power = 0;
@@ -292,11 +312,13 @@ int main(int argc, char *argv[])
       auto scalefactor = double(stop - start) / double(last - first);
       if (scalefactor < 1)
       {
-        spdlog::error("Scaled factor is less than 1. scaled_factor: {}", scalefactor);
+        // spdlog::error("Scaled factor is less than 1. scaled_factor: {}", scalefactor);
+        std::cerr << "Scaled factor is less than 1. scaled_factor: " << scalefactor << std::endl;
       }
       else
       {
-        spdlog::debug("scaled_factor: {}", scalefactor);
+        // spdlog::debug("scaled_factor: {}", scalefactor);
+        std::cout << "scaled_factor: " << scalefactor << std::endl;
       }
       auto scale = [=](const OUTPUT_DT val)
       {
