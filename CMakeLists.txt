@@ -44,11 +44,13 @@ add_executable(generator src/generator.cpp)
 add_executable(perflinear src/perflinear.cpp)
 add_executable(gentrace src/gentrace.cpp)
 add_executable(combinetrace src/combinetrace.cpp)
+add_executable(rsmodifyperf src/RSModifyperfect.cpp)
 target_link_libraries(datagen ${YAML_CPP_LIBRARIES} ${gflags_LIBRARIES})
 target_link_libraries(generator ${YAML_CPP_LIBRARIES} ${gflags_LIBRARIES})
 target_link_libraries(perflinear ${YAML_CPP_LIBRARIES} ${gflags_LIBRARIES})
 target_link_libraries(gentrace ${YAML_CPP_LIBRARIES} ${gflags_LIBRARIES})
 target_link_libraries(combinetrace ${YAML_CPP_LIBRARIES} ${gflags_LIBRARIES})
+target_link_libraries(rsmodifyperf ${YAML_CPP_LIBRARIES} ${gflags_LIBRARIES})
 
 # target_include_directories(test_alex PRIVATE ${DOCTEST_DOWNLOAD_DIR})
 
