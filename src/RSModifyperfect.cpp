@@ -12,6 +12,7 @@
 #include "yaml-cpp/yaml.h"
 #include <math.h>
 #include <gflags/gflags.h>
+#include "trace_helper.h"
 
 #define OUTPUT_DT uint64_t
 
@@ -65,6 +66,7 @@ int main(int argc, char *argv[])
       }
     }
   }
-  record(vec.begin(), vec.end(), filename);
+  // record(vec.begin(), vec.end(), filename);
+  to_binary_file(vec, filename);
   return 0;
 }
